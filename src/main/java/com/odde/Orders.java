@@ -17,4 +17,6 @@ public class Orders {
     public Order getOrder(int i) {
         return orders.get(i);
     }
+
+    public List<Order> getOrders() { return orders; }
 }

@@ -1,5 +1,7 @@
 package com.odde;
 
+import java.util.List;
+
 public class OrdersWriter {
     private Orders orders;
 
@@ -7,85 +9,69 @@ public class OrdersWriter {
         this.orders = orders;
     }
 
+    private String createJSONItem(String key, String value) {
+        return "\"" + key + "\": \"" + value + "\"";
+    }
+
+    private String createJSONItem(String key, Double value) {
+        return "\"" + key + "\": " + value;
+    }
+
+    private String createJSONItem(String key, int value) {
+        return "\"" + key + "\": " + value;
+    }
+
+    private StringBuffer createProduct(Product product) {
+        StringBuffer sb = new StringBuffer();
+
+        sb.append("{");
+        sb.append(createJSONItem("code", product.getCode()));
+        sb.append(", ");
+        sb.append(createJSONItem("color", product.getColor()));
+        sb.append(", ");
+
+        String size = product.getSize();
+        if (!Product.SIZE_NOT_APPLICABLE.equals(size)) {
+            sb.append(createJSONItem("size", size));
+            sb.append(", ");
+        }
+
+        sb.append(createJSONItem("price", product.getPrice()));
+        sb.append(", ");
+        sb.append(createJSONItem("currency", product.getCurrency()));
+        sb.append("}, ");
+
+        return sb;
+    }
+
+    private void deleteComma(StringBuffer sb) {
+        sb.delete(sb.length() - 2, sb.length());
+    }
+
     public String getContents() {
         StringBuffer sb = new StringBuffer("{\"orders\": [");
+        List<Order> orderList = orders.getOrders();
 
-        for (int i = 0; i < orders.getOrdersCount(); i++) {
-            Order order = orders.getOrder(i);
+        for (Order order : orderList) {
             sb.append("{");
-            sb.append("\"id\": ");
-            sb.append(order.getOrderId());
+            sb.append(createJSONItem("id", order.getOrderId()));
             sb.append(", ");
             sb.append("\"products\": [");
-            for (int j = 0; j < order.getProductsCount(); j++) {
-                Product product = order.getProduct(j);
 
-                sb.append("{");
-                sb.append("\"code\": \"");
-                sb.append(product.getCode());
-                sb.append("\", ");
-                sb.append("\"color\": \"");
-                sb.append(getColorFor(product));
-                sb.append("\", ");
-
-                if (product.getSize() != Product.SIZE_NOT_APPLICABLE) {
-                    sb.append("\"size\": \"");
-                    sb.append(getSizeFor(product));
-                    sb.append("\", ");
-                }
-
-                sb.append("\"price\": ");
-                sb.append(product.getPrice());
-                sb.append(", ");
-                sb.append("\"currency\": \"");
-                sb.append(product.getCurrency());
-                sb.append("\"}, ");
+            for (Product product : order.getProducts()) {
+                sb.append(createProduct(product));
             }
 
             if (order.getProductsCount() > 0) {
-                sb.delete(sb.length() - 2, sb.length());
+                deleteComma(sb);
             }
-
-            sb.append("]");
-            sb.append("}, ");
+            sb.append("]}, ");
         }
 
-        if (orders.getOrdersCount() > 0) {
-            sb.delete(sb.length() - 2, sb.length());
+        if (orderList.size() > 0) {
+            deleteComma(sb);
         }
 
         return sb.append("]}").toString();
-    }
-
-    private String getSizeFor(Product product) {
-        switch (product.getSize()) {
-            case 1:
-                return "XS";
-            case 2:
-                return "S";
-            case 3:
-                return "M";
-            case 4:
-                return "L";
-            case 5:
-                return "XL";
-            case 6:
-                return "XXL";
-            default:
-                return "Invalid Size";
-        }
-    }
-
-    private String getColorFor(Product product) {
-        switch (product.getColor()) {
-            case 1:
-                return "blue";
-            case 2:
-                return "red";
-            case 3:
-                return "yellow";
-            default:
-                return "no color";
-        }
     }
 }
